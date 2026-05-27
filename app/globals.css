@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #f8f1e6;
+  color: #1f2321;
+  font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #efe4d4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1d4f3a;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #123225;
+}
+
+.pattern-afro {
+  background-image:
+    linear-gradient(140deg, rgba(207, 163, 71, 0.14) 0%, rgba(207, 163, 71, 0.02) 44%),
+    linear-gradient(44deg, rgba(93, 65, 36, 0.1) 0%, rgba(93, 65, 36, 0.02) 40%),
+    linear-gradient(90deg, rgba(18, 50, 37, 0.12) 0%, rgba(18, 50, 37, 0.01) 54%);
+  background-size: 260px 260px, 220px 220px, 300px 300px;
+}
+
+.grid-fine {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.text-gold-gradient {
+  background: linear-gradient(120deg, #e6bc66 0%, #cfa347 55%, #9d7633 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-outline {
+  border: 1px solid rgba(18, 50, 37, 0.11);
+}
