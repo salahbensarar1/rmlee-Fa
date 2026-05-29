@@ -85,6 +85,16 @@ Optional:
 
 - `QUOTE_FROM_EMAIL`
 
+### Vercel Deployment Environment Setup
+
+1. Go to `Vercel -> Project -> Settings -> Environment Variables`.
+2. Add the following keys:
+   - `RESEND_API_KEY`
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `QUOTE_FROM_EMAIL`
+3. Redeploy the project so the API route can read the new values.
+
 ## Supabase Table Setup
 
 Run SQL in Supabase SQL Editor:

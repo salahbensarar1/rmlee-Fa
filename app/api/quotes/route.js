@@ -8,14 +8,26 @@ const REQUIRED_ENV_VARS = [
   'SUPABASE_SERVICE_ROLE_KEY',
 ]
 
+const OPTIONAL_ENV_VARS = ['QUOTE_FROM_EMAIL']
+
+const SUPPORTED_ENV_VARS = [...REQUIRED_ENV_VARS, ...OPTIONAL_ENV_VARS]
+
 function getMissingEnvVars() {
   return REQUIRED_ENV_VARS.filter(envVar => !process.env[envVar])
 }
 
+function logMissingEnvVars(missingVars) {
+  if (missingVars.length === 0) return
+
+  console.error(
+    `[quotes-api] Missing environment variables: ${missingVars.join(', ')}`,
+  )
+}
+
 function getDeveloperInstructionsForMissingEnv(missingVars) {
   const instructions = [
-    'Create a `.env.local` file in the project root.',
-    'Add the missing environment variables and restart `npm run dev`.',
+    'For local development: create a `.env.local` file and add the missing keys.',
+    'For Vercel: Project -> Settings -> Environment Variables. Add the missing keys and redeploy.',
   ]
 
   if (missingVars.includes('RESEND_API_KEY')) {
@@ -165,13 +177,16 @@ export async function POST(request) {
 
     const missingEnvVars = getMissingEnvVars()
 
-    if (missingEnvVars.length > 0) {
+  if (missingEnvVars.length > 0) {
+      logMissingEnvVars(missingEnvVars)
+
       return NextResponse.json(
         {
           success: false,
           error: 'configuration_missing',
-          message: 'Quote service is not configured yet.',
+          message: 'Quote service is not configured on the server.',
           missingEnvVars,
+          expectedEnvVars: SUPPORTED_ENV_VARS,
           developerInstructions: getDeveloperInstructionsForMissingEnv(missingEnvVars),
         },
         { status: 503 },

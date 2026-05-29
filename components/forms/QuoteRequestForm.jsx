@@ -92,9 +92,20 @@ export default function QuoteRequestForm({
       const payload = await response.json()
 
       if (!response.ok) {
+        const isConfigMissing = payload?.error === 'configuration_missing'
+        const missingEnvVars = Array.isArray(payload?.missingEnvVars)
+          ? payload.missingEnvVars
+          : []
+
+        const configMessage =
+          isConfigMissing && missingEnvVars.length > 0
+            ? `Quote service is not configured on the server. Missing environment variables: ${missingEnvVars.join(', ')}. Add them in Vercel Project Settings \u2192 Environment Variables, then redeploy.`
+            : null
+
         setResult({
           type: 'error',
           message:
+            configMessage ||
             payload.message ||
             'We could not submit your request right now. Please try again or contact us directly.',
           developerInstructions: payload.developerInstructions || [],
