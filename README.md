@@ -108,3 +108,15 @@ Open:
 npm run lint
 npm run build
 ```
+
+## Vercel Web Analytics
+
+This project uses Vercel Web Analytics.
+
+Install:
+npm i @vercel/analytics
+
+Analytics component is added in:
+app/layout.jsx
+
+After deployment, visit the site and navigate between pages to start collecting page views in the Vercel dashboard.
