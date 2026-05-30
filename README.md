@@ -39,6 +39,24 @@ Admin features:
 - Quote request review, status updates, admin notes
 - Buyer email reply flow with templates
 
+## Developer Panel
+
+Protected developer routes:
+
+- `/developer/login`
+- `/developer/dashboard`
+- `/developer/admin-users`
+- `/developer/system-health`
+- `/developer/settings`
+- `/developer/audit-log`
+
+Developer panel features:
+
+- Separate Supabase Auth access control via `DEVELOPER_USER_EMAILS`
+- Server-side system health checks for database, tables, storage bucket, and Resend
+- Read-only environment configuration overview (no secret values)
+- Allowed email list visibility for admin and developer roles
+
 ## Product Source Strategy
 
 - Public catalogue/product pages read active products from Supabase when configured.
@@ -72,6 +90,7 @@ Required:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `ADMIN_USER_EMAILS`
+- `DEVELOPER_USER_EMAILS`
 
 Optional:
 
@@ -88,6 +107,7 @@ Set in: `Vercel -> Project -> Settings -> Environment Variables`
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `ADMIN_USER_EMAILS`
+- `DEVELOPER_USER_EMAILS`
 - `TEST_EMAIL_OVERRIDE` (optional)
 
 Redeploy after changes.
@@ -110,6 +130,17 @@ Run SQL in Supabase SQL Editor:
 5. Redeploy.
 
 Only emails listed in `ADMIN_USER_EMAILS` can access admin routes/actions.
+
+## Developer User Setup
+
+1. Open Supabase Dashboard.
+2. Go to `Authentication -> Users`.
+3. Create developer user(s) with email/password.
+4. Set `DEVELOPER_USER_EMAILS` as comma-separated emails, for example:
+   - `devops@yourdomain.com,engineer@yourdomain.com`
+5. Redeploy.
+
+Only emails listed in `DEVELOPER_USER_EMAILS` can access `/developer` routes.
 
 ## Supabase Storage Setup (Product Images)
 

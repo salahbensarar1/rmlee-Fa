@@ -7,8 +7,9 @@ import { usePathname } from 'next/navigation'
 export default function RootShell({ children }) {
   const pathname = usePathname() || ''
   const isAdminRoute = pathname.startsWith('/admin')
+  const isDeveloperRoute = pathname.startsWith('/developer')
 
-  if (isAdminRoute) {
+  if (isAdminRoute || isDeveloperRoute) {
     return children
   }
 
