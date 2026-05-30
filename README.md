@@ -6,100 +6,158 @@ Premium Next.js + Tailwind B2B agribusiness website for Character Before Carrier
 
 - Next.js 14 (App Router)
 - Tailwind CSS
-- React
-- Resend (email notifications)
-- Supabase (quote request storage)
+- Supabase (Auth, Postgres, Storage)
+- Resend (quote + admin reply email delivery)
+- Vercel Web Analytics
 
 ## Main Pages
 
-- `/` Homepage (hero, trust badges, category preview, featured products, why choose us, target buyers, quote CTA)
-- `/products` Product catalogue with search + category filtering
-- `/products/[slug]` Product detail pages with buyer-oriented specs
-- `/about` Company overview, mission, vision, values, founder message
-- `/quality` Traceability, quality control, safety, standards, certifications
-- `/supply-solutions` Buyer-segment supply programs
-- `/contact` Serious quote request form
+- `/` Homepage
+- `/products` Product catalogue
+- `/products/[slug]` Product detail pages
+- `/about`
+- `/quality`
+- `/supply-solutions`
+- `/contact`
 
-## Data Architecture
+## Admin Panel
 
-Product content is centralized in:
+Protected routes:
 
-- `data/products.js`
+- `/admin/login`
+- `/admin/dashboard`
+- `/admin/products`
+- `/admin/products/new`
+- `/admin/products/[id]/edit`
+- `/admin/quote-requests`
+- `/admin/quote-requests/[id]`
 
-Each product object includes:
+Admin features:
 
-- `id`
-- `slug`
-- `name`
-- `category`
-- `shortDescription`
-- `longDescription`
-- `image`
-- `pricePerKg`
-- `minimumOrderQuantity`
-- `packagingOptions`
-- `availability`
-- `certifications`
-- `supplyCapacity`
-- `suitableBuyers`
-- `featured`
+- Supabase Auth login
+- Product CRUD (create, edit, deactivate/activate, delete)
+- Quote request review, status updates, admin notes
+- Buyer email reply flow with templates
 
-This powers both catalogue and dynamic product detail pages.
+## Product Source Strategy
+
+- Public catalogue/product pages read active products from Supabase when configured.
+- If Supabase is unavailable or empty, public pages safely fall back to `data/products.js`.
 
 ## Quote Request Flow
 
 - Frontend form: `components/forms/QuoteRequestForm.jsx`
-- API route: `app/api/quotes/route.js`
+- Public API route: `app/api/quotes/route.js`
+- Admin reply API route: `app/api/admin/quote-requests/[id]/reply/route.js`
 
-Submission behavior:
+Behavior:
 
-1. Validates required fields:
-   - `name`
-   - `email` or `phone`
-   - `productInterest`
-   - `quantityMessage`
-2. Sends email notification through Resend to:
-   - `richardafriyie22@gmail.com`
-3. Stores request in Supabase table:
-   - `quote_requests`
-4. Returns success and shows WhatsApp follow-up link:
-   - `+233242728984`
-
-If environment variables are missing, the API fails gracefully with developer instructions in the response.
+1. Validate required fields (`name`, `email or phone`, `productInterest`, `quantityMessage`)
+2. Insert into `quote_requests`
+3. Send notification email to business inbox (`QUOTE_TO_EMAIL`)
+4. Return success + WhatsApp follow-up link
 
 ## Environment Variables
 
-Create `.env.local` from `.env.example`:
+Use `.env.example` as template and create `.env.local`.
 
-```bash
-cp .env.example .env.local
-```
+Do not commit `.env.local`.
 
 Required:
 
 - `RESEND_API_KEY`
+- `QUOTE_FROM_EMAIL`
+- `QUOTE_TO_EMAIL`
 - `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_USER_EMAILS`
 
 Optional:
 
+- `TEST_EMAIL_OVERRIDE` (redirect all outgoing customer reply emails to one test inbox during testing)
+
+### Vercel Environment Variables
+
+Set in: `Vercel -> Project -> Settings -> Environment Variables`
+
+- `RESEND_API_KEY`
 - `QUOTE_FROM_EMAIL`
+- `QUOTE_TO_EMAIL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_USER_EMAILS`
+- `TEST_EMAIL_OVERRIDE` (optional)
 
-### Vercel Deployment Environment Setup
+Redeploy after changes.
 
-1. Go to `Vercel -> Project -> Settings -> Environment Variables`.
-2. Add the following keys:
-   - `RESEND_API_KEY`
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `QUOTE_FROM_EMAIL`
-3. Redeploy the project so the API route can read the new values.
-
-## Supabase Table Setup
+## Supabase Setup
 
 Run SQL in Supabase SQL Editor:
 
 - `supabase/quote_requests.sql`
+- `supabase/migrations/20260529_create_products_table.sql`
+- `supabase/migrations/20260529_alter_quote_requests_for_admin.sql`
+
+## Supabase Auth Admin User Setup
+
+1. Open Supabase Dashboard.
+2. Go to `Authentication -> Users`.
+3. Create admin user(s) with email/password.
+4. Set `ADMIN_USER_EMAILS` as comma-separated list, for example:
+   - `owner@yourdomain.com,manager@yourdomain.com`
+5. Redeploy.
+
+Only emails listed in `ADMIN_USER_EMAILS` can access admin routes/actions.
+
+## Supabase Storage Setup (Product Images)
+
+Create bucket:
+
+- Name: `product-images`
+- Public bucket: enabled (so saved image URLs can be used on public pages)
+- `next.config.js` allows `**.supabase.co` image hosts for uploaded product images
+
+Admin product forms upload image files to this bucket and save public URL in `products.image`.
+
+## Test Product CRUD
+
+1. Login at `/admin/login` with allowlisted admin email.
+2. Open `/admin/products`.
+3. Create a new product (including image upload and pricing fields).
+4. Edit product and confirm updates save.
+5. Deactivate/activate product and confirm status changes.
+6. Delete product and confirm removal.
+
+## Test Quote Requests
+
+1. Submit quote from `/contact`.
+2. Open `/admin/quote-requests`.
+3. Confirm row appears with buyer name, email, product interest, status, submitted date.
+4. Open detail page, update status/notes, and save.
+5. Send buyer reply email from admin detail page.
+
+## Resend Testing Limitation
+
+When using `onboarding@resend.dev` or unverified sending setup, Resend test mode only allows sending to your verified account email.
+
+If you get that error:
+
+- Use `QUOTE_TO_EMAIL` or `TEST_EMAIL_OVERRIDE` with your verified email for testing.
+- Or verify a domain in Resend and send from that domain.
+
+### TEST_EMAIL_OVERRIDE Behavior
+
+When `TEST_EMAIL_OVERRIDE` is set, admin customer reply emails are sent to that override address instead of the buyer email. This is for testing only and does not change buyer email data stored in the database.
+
+## Production Email Note
+
+For production:
+
+1. Verify your sending domain in Resend.
+2. Use a domain-based `QUOTE_FROM_EMAIL` (for example `quotes@yourdomain.com`).
+3. Keep `QUOTE_TO_EMAIL` set to the real business inbox.
 
 ## Run Locally
 
@@ -107,10 +165,6 @@ Run SQL in Supabase SQL Editor:
 npm install
 npm run dev
 ```
-
-Open:
-
-- `http://localhost:3000`
 
 ## Quality Checks
 
@@ -121,12 +175,4 @@ npm run build
 
 ## Vercel Web Analytics
 
-This project uses Vercel Web Analytics.
-
-Install:
-npm i @vercel/analytics
-
-Analytics component is added in:
-app/layout.jsx
-
-After deployment, visit the site and navigate between pages to start collecting page views in the Vercel dashboard.
+Analytics component is mounted in `app/layout.jsx` using `@vercel/analytics`.

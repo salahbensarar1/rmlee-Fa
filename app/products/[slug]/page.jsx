@@ -10,13 +10,15 @@ import {
 } from '@/lib/products'
 
 export async function generateStaticParams() {
-  return getAllProducts().map(product => ({
+  const products = await getAllProducts({ activeOnly: true })
+
+  return products.map(product => ({
     slug: product.slug,
   }))
 }
 
 export async function generateMetadata({ params }) {
-  const product = getProductBySlug(params.slug)
+  const product = await getProductBySlug(params.slug)
 
   if (!product) {
     return {
@@ -30,14 +32,14 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default function ProductDetailPage({ params }) {
-  const product = getProductBySlug(params.slug)
+export default async function ProductDetailPage({ params }) {
+  const product = await getProductBySlug(params.slug)
 
   if (!product) {
     notFound()
   }
 
-  const relatedProducts = getRelatedProducts(product.slug, 3)
+  const relatedProducts = await getRelatedProducts(product.slug, 3)
 
   return (
     <main>
@@ -94,7 +96,7 @@ export default function ProductDetailPage({ params }) {
             </div>
 
             <Link
-              href={`/contact?product=${encodeURIComponent(product.name)}`}
+              href={`/contact?productId=${encodeURIComponent(String(product.id))}&product=${encodeURIComponent(product.name)}&category=${encodeURIComponent(product.category)}`}
               className="inline-flex w-full items-center justify-center rounded-full bg-forest px-6 py-3 text-sm font-semibold text-white transition hover:bg-forest-light"
             >
               Request Quote

@@ -26,10 +26,39 @@ function buildInitialFormState(initialProductInterest = '') {
   }
 }
 
+function normalizeProductOptions(productOptions) {
+  const unique = new Map()
+
+  for (const option of productOptions) {
+    if (typeof option === 'string') {
+      const value = option.trim()
+      if (!value || unique.has(value)) continue
+      unique.set(value, { value, label: value })
+      continue
+    }
+
+    if (!option || typeof option !== 'object') continue
+
+    const value = String(option.value || option.name || '').trim()
+    const label = String(option.label || option.name || value).trim()
+
+    if (!value || !label || unique.has(value)) continue
+
+    unique.set(value, { value, label })
+  }
+
+  return Array.from(unique.values())
+}
+
 export default function QuoteRequestForm({
   productOptions = [],
   initialProductInterest = '',
 }) {
+  const normalizedProductOptions = useMemo(
+    () => normalizeProductOptions(productOptions),
+    [productOptions],
+  )
+
   const initialState = useMemo(
     () => buildInitialFormState(initialProductInterest),
     [initialProductInterest],
@@ -266,9 +295,9 @@ export default function QuoteRequestForm({
             }`}
           >
             <option value="">Select product or category</option>
-            {productOptions.map(option => (
-              <option key={option} value={option}>
-                {option}
+            {normalizedProductOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>

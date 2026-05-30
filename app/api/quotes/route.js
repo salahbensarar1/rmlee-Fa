@@ -8,7 +8,7 @@ const REQUIRED_ENV_VARS = [
   'SUPABASE_SERVICE_ROLE_KEY',
 ]
 
-const OPTIONAL_ENV_VARS = ['QUOTE_FROM_EMAIL']
+const OPTIONAL_ENV_VARS = ['QUOTE_FROM_EMAIL', 'QUOTE_TO_EMAIL', 'TEST_EMAIL_OVERRIDE']
 
 const SUPPORTED_ENV_VARS = [...REQUIRED_ENV_VARS, ...OPTIONAL_ENV_VARS]
 
@@ -43,6 +43,12 @@ function getDeveloperInstructionsForMissingEnv(missingVars) {
 
   instructions.push(
     'Optional: set `QUOTE_FROM_EMAIL` (defaults to onboarding@resend.dev for testing).',
+  )
+  instructions.push(
+    'Optional: set `QUOTE_TO_EMAIL` to route quote notifications to the business inbox.',
+  )
+  instructions.push(
+    'Optional for local testing: set `TEST_EMAIL_OVERRIDE` to route all outgoing emails to your verified test inbox.',
   )
 
   return instructions
@@ -146,6 +152,24 @@ function getQuoteTableInstructions() {
   ]
 }
 
+function getQuoteRecipientEmail() {
+  const testOverride = (process.env.TEST_EMAIL_OVERRIDE || '').trim()
+  if (testOverride) return testOverride
+
+  const quoteToEmail = (process.env.QUOTE_TO_EMAIL || '').trim()
+  return quoteToEmail || 'richardafriyie22@gmail.com'
+}
+
+function isResendTestingModeError(message) {
+  const normalized = String(message || '').toLowerCase()
+
+  return (
+    normalized.includes('you can only send testing emails to your own email address') ||
+    normalized.includes('resend.dev domain is only available for testing') ||
+    normalized.includes('verify a domain')
+  )
+}
+
 export async function POST(request) {
   try {
     let payload
@@ -177,7 +201,7 @@ export async function POST(request) {
 
     const missingEnvVars = getMissingEnvVars()
 
-  if (missingEnvVars.length > 0) {
+    if (missingEnvVars.length > 0) {
       logMissingEnvVars(missingEnvVars)
 
       return NextResponse.json(
@@ -211,6 +235,7 @@ export async function POST(request) {
     )
 
     const resend = new Resend(process.env.RESEND_API_KEY)
+    const quoteToEmail = getQuoteRecipientEmail()
 
     const dbInsertPromise = supabase
       .from('quote_requests')
@@ -232,7 +257,7 @@ export async function POST(request) {
 
     const emailSendPromise = resend.emails.send({
       from: process.env.QUOTE_FROM_EMAIL || 'Character Before Carrier Farms <onboarding@resend.dev>',
-      to: ['richardafriyie22@gmail.com'],
+      to: [quoteToEmail],
       replyTo: quote.email || undefined,
       subject: `New Quote Request: ${quote.productInterest}`,
       text: createPlainTextEmail(quote),
@@ -280,13 +305,22 @@ export async function POST(request) {
     }
 
     if (errorMessage.includes('RESEND_SEND_FAILED')) {
+      const safeResendMessage = errorMessage.replace('RESEND_SEND_FAILED: ', '').trim()
+      console.error(`[quotes-api] Resend send failed: ${safeResendMessage}`)
+
+      const resendTestingMode = isResendTestingModeError(safeResendMessage)
+
       return NextResponse.json(
         {
           success: false,
-          message: 'Quote request was received but email notification failed.',
+          message: resendTestingMode
+            ? 'Resend test mode only allows sending to your verified account email. Use QUOTE_TO_EMAIL or TEST_EMAIL_OVERRIDE with that email for testing, or verify a sending domain in Resend.'
+            : 'Quote request was received but email notification failed.',
+          resendTestingMode,
           developerInstructions: [
-            'Check `RESEND_API_KEY` and sender domain setup in Resend.',
-            'For testing, use onboarding@resend.dev as sender in `QUOTE_FROM_EMAIL`.',
+            'Check `RESEND_API_KEY`, `QUOTE_FROM_EMAIL`, and sender domain setup in Resend.',
+            'For testing with onboarding@resend.dev, Resend only allows recipients tied to your account.',
+            'Use `QUOTE_TO_EMAIL` or `TEST_EMAIL_OVERRIDE` to route testing emails to your verified inbox.',
           ],
         },
         { status: 500 },

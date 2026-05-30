@@ -8,9 +8,9 @@ export const metadata = {
     'Browse maize, grains, vegetables, poultry, eggs, livestock products, feeds, packaged foodstuffs, and advisory services from Character Before Carrier Farms.',
 }
 
-export default function ProductsPage({ searchParams }) {
-  const products = getAllProducts()
-  const categories = getAllCategories()
+export default async function ProductsPage({ searchParams }) {
+  const products = await getAllProducts({ activeOnly: true })
+  const categories = await getAllCategories()
 
   const initialCategory =
     typeof searchParams?.category === 'string' ? searchParams.category : 'All Categories'

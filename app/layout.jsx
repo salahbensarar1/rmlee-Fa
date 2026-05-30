@@ -1,8 +1,8 @@
 import './globals.css'
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
+import RootShell from '@/components/layout/RootShell'
 import { Analytics } from '@vercel/analytics/next'
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from '@vercel/speed-insights/next'
+
 export const metadata = {
   metadataBase: new URL('https://characterbeforecarrierfarms.com'),
   title: {
@@ -33,10 +33,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-cream text-charcoal antialiased">
-        <Navigation />
-        <SpeedInsights/>
-        {children}
-        <Footer />
+        <RootShell>{children}</RootShell>
+        <SpeedInsights />
         <Analytics />
       </body>
     </html>

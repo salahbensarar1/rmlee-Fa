@@ -1,6 +1,18 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { formatPricePerKg } from '@/lib/products'
+
+function formatPricePerKg(pricePerKg) {
+  if (pricePerKg == null || pricePerKg === '') return 'Price on request'
+  if (typeof pricePerKg === 'number') {
+    return new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: 'GHS',
+      maximumFractionDigits: 2,
+    }).format(pricePerKg)
+  }
+
+  return String(pricePerKg)
+}
 
 export default function ProductCard({ product }) {
   return (
@@ -45,7 +57,7 @@ export default function ProductCard({ product }) {
             View Details
           </Link>
           <Link
-            href="/contact"
+            href={`/contact?productId=${encodeURIComponent(String(product.id))}&product=${encodeURIComponent(product.name)}&category=${encodeURIComponent(product.category)}`}
             className="inline-flex flex-1 items-center justify-center rounded-full bg-forest px-4 py-2 text-sm font-semibold text-white transition hover:bg-forest-light"
           >
             Request Quote

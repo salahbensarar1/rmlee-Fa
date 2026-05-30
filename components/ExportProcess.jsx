@@ -9,8 +9,8 @@ const supplySolutions = [
   'Accra-Pokuase logistics coordination and buyer dispatch support',
 ]
 
-export default function ExportProcess() {
-  const featuredProducts = getFeaturedProducts().slice(0, 4)
+export default async function ExportProcess() {
+  const featuredProducts = (await getFeaturedProducts()).slice(0, 4)
 
   return (
     <section id="featured-products" className="relative overflow-hidden bg-white py-20">
